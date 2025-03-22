@@ -8,8 +8,6 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
 @AllArgsConstructor
 @Builder
 public class Booking {

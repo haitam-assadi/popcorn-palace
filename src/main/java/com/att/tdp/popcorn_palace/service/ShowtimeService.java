@@ -4,7 +4,10 @@ import com.att.tdp.popcorn_palace.entity.Movie;
 import com.att.tdp.popcorn_palace.entity.Showtime;
 import com.att.tdp.popcorn_palace.repository.MovieRepository;
 import com.att.tdp.popcorn_palace.repository.ShowtimeRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +29,7 @@ public class ShowtimeService {
 
         // 1. Check if the movie exists
         Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("Movie with ID " + movieId + " not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with ID " + movieId + " not found"));
 
         // 2. Check for overlapping showtimes
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(

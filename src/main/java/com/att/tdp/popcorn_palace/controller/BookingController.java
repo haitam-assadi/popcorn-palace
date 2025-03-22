@@ -21,19 +21,24 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<?> createBooking(@RequestBody Map<String, Object> request) {
         try {
-            Long showtimeId = Long.valueOf(request.get("showtimeId").toString());
+            Map<String, Object> showtimeMap = (Map<String, Object>) request.get("showtime");
+            Long showtimeId = Long.valueOf(showtimeMap.get("id").toString());
+
             List<Integer> seats = ((List<?>) request.get("seats"))
                     .stream()
                     .map(seat -> Integer.parseInt(seat.toString()))
                     .toList();
+
             String customerName = request.get("customerName").toString();
 
             Booking booking = bookingService.createBooking(showtimeId, seats, customerName);
             return ResponseEntity.ok(booking);
         } catch (Exception e) {
+            e.printStackTrace(); // helpful for debugging
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @GetMapping
     public List<Booking> getAllBookings() {

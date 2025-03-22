@@ -4,7 +4,9 @@ import com.att.tdp.popcorn_palace.entity.Booking;
 import com.att.tdp.popcorn_palace.entity.Showtime;
 import com.att.tdp.popcorn_palace.repository.BookingRepository;
 import com.att.tdp.popcorn_palace.repository.ShowtimeRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -21,7 +23,8 @@ public class BookingService {
 
     public Booking createBooking(Long showtimeId, List<Integer> seats, String customerName) {
         Showtime showtime = showtimeRepository.findById(showtimeId)
-                .orElseThrow(() -> new RuntimeException("Showtime not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Showtime not found"));
+
 
         // Check for seat conflicts
         List<Booking> existing = bookingRepository.findByShowtimeId(showtimeId);

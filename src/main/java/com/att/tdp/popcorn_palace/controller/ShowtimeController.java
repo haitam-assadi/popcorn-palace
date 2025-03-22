@@ -21,13 +21,9 @@ public class ShowtimeController {
 
     // Create a new showtime
     @PostMapping
-    public ResponseEntity<?> addShowtime(@Valid @RequestBody Showtime showtime) {
-        try {
-            Showtime saved = showtimeService.addShowtime(showtime);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Showtime> addShowtime(@Valid @RequestBody Showtime showtime) {
+        Showtime saved = showtimeService.addShowtime(showtime);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
 

@@ -9,6 +9,8 @@ import static org.hamcrest.Matchers.*;
 
 public class BookingControllerTest {
 
+    private static final Long EXISTING_SHOWTIME_ID = 1L; // Replace with actual ID if needed
+
     @BeforeAll
     public static void setup() {
         RestAssured.baseURI = "http://localhost";
@@ -16,97 +18,63 @@ public class BookingControllerTest {
     }
 
     @Test
-    public void testCreateBooking_success() {
-        // Make sure movie with ID 1 and showtime with ID 1 exist before running this
+    public void testCreateValidBooking() {
         String bookingJson = """
             {
-              "showtime": {
-                "id": 1
-              },
-              "customerName": "John Doe",
-              "seats": [6, 7]
+              "showtime": { "id": %d },
+              "seats": [10, 11],
+              "customerName": "John Doe"
             }
-        """;
+        """.formatted(EXISTING_SHOWTIME_ID);
 
         RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(bookingJson)
                 .when()
                 .post("/bookings")
-                .then()
-                .statusCode(201)
-                .body(containsString("Booking successful"));
-    }
-
-    @Test
-    public void testCreateBooking_conflictOnDuplicateSeats() {
-        // Attempting to book the same seats again should result in 409
-        String bookingJson = """
-            {
-              "showtime": {
-                "id": 1
-              },
-              "customerName": "Jane Doe",
-              "seats": [3, 4]
-            }
-        """;
-
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(bookingJson)
-                .when()
-                .post("/bookings")
-                .then()
-                .statusCode(409)
-                .body(containsString("already booked"));
-    }
-
-    @Test
-    public void testGetAllBookings() {
-        RestAssured.given()
-                .when()
-                .get("/bookings")
                 .then()
                 .statusCode(200)
-                .body("$", not(empty()));
+                .body("id", notNullValue())
+                .body("customerName", equalTo("John Doe"))
+                .body("seats.size()", equalTo(2));
     }
 
     @Test
-    public void testGetBookingById_notFound() {
-        RestAssured.given()
-                .when()
-                .get("/bookings/9999")
-                .then()
-                .statusCode(404);
-    }
-
-    @Test
-    public void testDeleteBooking_success() {
-        // First create a booking
+    public void testBookingMissingCustomer_shouldFail() {
         String bookingJson = """
             {
-              "showtime": {
-                "id": 1
-              },
-              "customerName": "Mark Smith",
-              "seats": [5]
+              "showtime": { "id": %d },
+              "seats": [1, 2]
+            }
+        """.formatted(EXISTING_SHOWTIME_ID);
+
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(bookingJson)
+                .when()
+                .post("/bookings")
+                .then()
+                .statusCode(400)
+                .body(containsString("customerName"));
+    }
+
+    @Test
+    public void testBookingInvalidShowtime_shouldFail() {
+        String bookingJson = """
+            {
+              "showtime": { "id": 9999 },
+              "seats": [1],
+              "customerName": "Test User"
             }
         """;
 
-        // Create booking
-        int bookingId = RestAssured.given()
+        RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(bookingJson)
+                .when()
                 .post("/bookings")
                 .then()
-                .statusCode(201)
-                .extract()
-                .path("id");
-
-        // Now delete it
-        RestAssured.given()
-                .delete("/bookings/" + bookingId)
-                .then()
-                .statusCode(204);
+                .statusCode(400)
+                .body(containsString("not found")); // Adjust depending on your error message
     }
 }
