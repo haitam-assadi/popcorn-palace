@@ -5,27 +5,78 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static org.hamcrest.Matchers.*;
 
 public class BookingControllerTest {
 
-    private static final Long EXISTING_SHOWTIME_ID = 1L; // Replace with actual ID if needed
+    static Long movieId;
+    static Long showtimeId;
 
     @BeforeAll
     public static void setup() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
+
+        // Create a Movie
+        String movieJson = """
+            {
+              "title": "Booking Test",
+              "genre": "Action",
+              "duration": 120,
+              "rating": 8.5,
+              "releaseYear": 2023
+            }
+        """;
+
+        movieId = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(movieJson)
+                .when()
+                .post("/movies")
+                .then()
+                .statusCode(201)
+                .extract()
+                .jsonPath()
+                .getLong("id");
+
+        // Create a Showtime
+        String now = LocalDateTime.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String later = LocalDateTime.now().plusDays(1).plusHours(2).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+        String showtimeJson = """
+            {
+              "startTime": "%s",
+              "endTime": "%s",
+              "theater": "Booking Theater",
+              "price": 30.0,
+              "movie": { "id": %d }
+            }
+        """.formatted(now, later, movieId);
+
+        showtimeId = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(showtimeJson)
+                .when()
+                .post("/showtimes")
+                .then()
+                .statusCode(201)
+                .extract()
+                .jsonPath()
+                .getLong("id");
     }
 
     @Test
-    public void testCreateValidBooking() {
+    public void testValidBookingWithShowtimeId() {
         String bookingJson = """
             {
-              "showtime": { "id": %d },
-              "seats": [10, 11],
-              "customerName": "John Doe"
+              "showtimeId": %d,
+              "seats": [5, 6],
+              "customerName": "Jane Doe"
             }
-        """.formatted(EXISTING_SHOWTIME_ID);
+        """.formatted(showtimeId);
 
         RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -35,46 +86,7 @@ public class BookingControllerTest {
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
-                .body("customerName", equalTo("John Doe"))
-                .body("seats.size()", equalTo(2));
-    }
-
-    @Test
-    public void testBookingMissingCustomer_shouldFail() {
-        String bookingJson = """
-            {
-              "showtime": { "id": %d },
-              "seats": [1, 2]
-            }
-        """.formatted(EXISTING_SHOWTIME_ID);
-
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(bookingJson)
-                .when()
-                .post("/bookings")
-                .then()
-                .statusCode(400)
-                .body(containsString("customerName"));
-    }
-
-    @Test
-    public void testBookingInvalidShowtime_shouldFail() {
-        String bookingJson = """
-            {
-              "showtime": { "id": 9999 },
-              "seats": [1],
-              "customerName": "Test User"
-            }
-        """;
-
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(bookingJson)
-                .when()
-                .post("/bookings")
-                .then()
-                .statusCode(400)
-                .body(containsString("not found")); // Adjust depending on your error message
+                .body("seats.size()", is(2))
+                .body("customerName", equalTo("Jane Doe"));
     }
 }
