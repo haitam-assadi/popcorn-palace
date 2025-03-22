@@ -72,7 +72,7 @@ public class BookingControllerTest {
     public void testValidBookingWithShowtimeId() {
         String bookingJson = """
             {
-              "showtimeId": %d,
+              "showtime": { "id": %d },
               "seats": [5, 6],
               "customerName": "Jane Doe"
             }
