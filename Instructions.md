@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #  Instructions
 
 Welcome to the **Popcorn Palace** backend system!  
