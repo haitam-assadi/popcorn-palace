@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #  Instructions
 
 Welcome to the **Popcorn Palace** backend system!  
@@ -170,4 +171,3 @@ java -jar target/popcorn-palace-0.0.1-SNAPSHOT.jar
 - Ensure nothing else is using port `8080`
 - Database is PostgreSQL, managed via `docker-compose`
 - Credentials/configs are in `application.yaml`
-
