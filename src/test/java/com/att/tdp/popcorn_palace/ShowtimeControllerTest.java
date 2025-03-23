@@ -4,20 +4,50 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.hamcrest.Matchers.*;
 
-public class ShowtimeControllerTest {
 
-    private static final Long VALID_MOVIE_ID = 1L; // Make sure movie with this ID exists
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class ShowtimeControllerTest {
+    static Long movieId;
+
+    @LocalServerPort
+    private int port;
 
     @BeforeAll
-    static void setup() {
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 8080;
+    public void setup() {
+        RestAssured.port = port;
+        RestAssured.baseURI = "http://localhost/";
+
+        String movieJson = """
+            {
+              "title": "Booking Test",
+              "genre": "Action",
+              "duration": 120,
+              "rating": 8.5,
+              "releaseYear": 2023
+            }
+        """;
+
+        movieId = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(movieJson)
+                .when()
+                .post("/movies")
+                .then()
+                .statusCode(201)
+                .extract()
+                .jsonPath()
+                .getLong("id");
+
     }
 
     private String formatDate(LocalDateTime dateTime) {
@@ -37,7 +67,7 @@ public class ShowtimeControllerTest {
             "price": 39.99,
             "movie": { "id": %d }
         }
-        """.formatted(start, end, VALID_MOVIE_ID);
+        """.formatted(start, end, movieId);
 
         RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -82,7 +112,7 @@ public class ShowtimeControllerTest {
             "price": 20.0,
             "movie": { "id": %d }
         }
-        """.formatted(start, end, VALID_MOVIE_ID);
+        """.formatted(start, end, movieId);
 
         int showtimeId = RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -104,7 +134,7 @@ public class ShowtimeControllerTest {
             "price": 55.0,
             "movie": { "id": %d }
         }
-        """.formatted(start, end, VALID_MOVIE_ID);
+        """.formatted(start, end, movieId);
 
         RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -131,7 +161,7 @@ public class ShowtimeControllerTest {
             "price": 15.0,
             "movie": { "id": %d }
         }
-        """.formatted(start, end, VALID_MOVIE_ID);
+        """.formatted(start, end, movieId);
 
         int showtimeId = RestAssured.given()
                 .contentType(ContentType.JSON)

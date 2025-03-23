@@ -4,21 +4,29 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.hamcrest.Matchers.*;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BookingControllerTest {
 
     static Long movieId;
     static Long showtimeId;
 
+    @LocalServerPort
+    private int port;
+
     @BeforeAll
-    public static void setup() {
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 8080;
+    public void setup() {
+        RestAssured.port = port;
+        RestAssured.baseURI = "http://localhost/";
 
         // Create a Movie
         String movieJson = """
