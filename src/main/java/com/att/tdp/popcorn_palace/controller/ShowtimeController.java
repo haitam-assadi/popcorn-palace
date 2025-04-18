@@ -1,7 +1,9 @@
 package com.att.tdp.popcorn_palace.controller;
 
+import com.att.tdp.popcorn_palace.entity.Role;
 import com.att.tdp.popcorn_palace.entity.Showtime;
 import com.att.tdp.popcorn_palace.service.ShowtimeService;
+import com.att.tdp.popcorn_palace.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.List;
 public class ShowtimeController {
 
     private final ShowtimeService showtimeService;
+    private final UserService userService;
 
-    public ShowtimeController(ShowtimeService showtimeService) {
+    public ShowtimeController(ShowtimeService showtimeService, UserService userService) {
         this.showtimeService = showtimeService;
+        this.userService = userService;
     }
 
     // Create a new showtime
@@ -29,7 +33,12 @@ public class ShowtimeController {
 
     // Get all showtimes
     @GetMapping
-    public ResponseEntity<List<Showtime>> getAllShowtimes() {
+    public ResponseEntity<?> getAllShowtimes(@RequestParam String username) {
+        Role role = userService.getUserRole(username);
+        if(role == null || role !=Role.ADMIN){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("just admins can get show times");
+        }
         List<Showtime> showtimes = showtimeService.getAllShowtimes();
         return ResponseEntity.ok(showtimes);
     }
